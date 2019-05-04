@@ -249,3 +249,24 @@ prop_secondFLaw x = fmap (f . g) mylist == fmap f (fmap g mylist)
         g = (*4)
 
 -- Ex 9
+data Person = Person {  name  :: String,
+                        age   :: Int,
+                        sex   :: String,
+                        place :: String
+                      } deriving Show
+
+personDB :: [Person]
+personDB = [Person "a" 1 "M" "Enschede",
+            Person "b" 5 "M" "Zwolle",
+            Person "c" 34 "F" "Hengelo",
+            Person "d" 11 "F" "Enschede"]
+-- 2
+plus :: Int -> [Person] -> [Person]
+plus n = map (\x -> x {age = age x + n})
+-- 3
+getNames :: [Person] -> [String]
+getNames = map (\x -> name x)
+
+-- Ex 10
+getInt :: IO Integer
+getInt = fmap (read::String->Integer) getLine
