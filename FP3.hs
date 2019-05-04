@@ -223,3 +223,29 @@ instance Functor BinTree where
   fmap f (Node n l r) = Node (f n) (fmap f l) (fmap f r)
 
 -- Ex 8
+data MyList a = Nil | Cons a (MyList a)
+              deriving (Show, Eq)
+
+mylst = Cons 1 $ Cons 2 $ Cons 3 $ Nil
+-- 1
+instance Functor MyList where
+  fmap f Nil = Nil
+  fmap f (Cons a list) = Cons (f a) (fmap f list)
+-- 2
+fromList :: [a] -> MyList a
+fromList []     = Nil
+fromList (x:xs) = Cons x (fromList xs)
+-- 3
+-- Functor laws slide 120 /141
+prop_firstFLaw :: Eq a=> [a] -> Bool
+prop_firstFLaw x = id mylist == fmap id mylist
+  where mylist = fromList x
+-- 4
+-- Only tested for two arbitrary functions
+prop_secondFLaw :: [Int] -> Bool
+prop_secondFLaw x = fmap (f . g) mylist == fmap f (fmap g mylist)
+  where mylist = fromList x
+        f = (+10)
+        g = (*4)
+
+-- Ex 9
