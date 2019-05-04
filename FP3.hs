@@ -208,3 +208,18 @@ cutOffAt(NodeInt i l r) d
 data BinTree a  = Leaf
                 | Node a (BinTree a) (BinTree a)
                 deriving (Show, Eq)
+
+-- 1
+instance Show a => PP (BinTree a) where
+  pp Leaf         = RoseNode "" []
+  pp (Node n l r) = RoseNode (show n) [pp l,  pp r]
+-- 2
+instance BinMirror (BinTree a) where
+  binMirror Leaf          = Leaf
+  binMirror (Node n l r)  = Node n (binMirror r) (binMirror l)
+-- 3
+instance Functor BinTree where
+  fmap f Leaf         = Leaf
+  fmap f (Node n l r) = Node (f n) (fmap f l) (fmap f r)
+
+-- Ex 8
