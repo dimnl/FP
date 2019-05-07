@@ -84,9 +84,9 @@ instance PP Tree1d where
   pp = pp1d
 
 -- Ex 2
-treeAdd :: Tree1a -> Tree1a
-treeAdd (Leaf1a n)      = Leaf1a (n+1)
-treeAdd (Node1a n l r)  = Node1a (n+1) (treeAdd l) (treeAdd r)
+treeAdd :: Int->Tree1a -> Tree1a
+treeAdd x (Leaf1a n)      = Leaf1a (n+x)
+treeAdd x (Node1a n l r)  = Node1a (n+x) (treeAdd x l) (treeAdd x r)
 
 -- 2
 treeSquare :: Tree1a -> Tree1a
