@@ -60,32 +60,32 @@ data Value = Const Int
            | Id String
            deriving Show
 
+la :: [Char] -> [Char] -> Bool -- look ahead function
+la xs el = length xs > 0 && (head xs) `elem` el
+
 parseFactor2 :: String -> (BinTree Char Value, String)
-parseFactor2 s@(x:xs)
-  | isDigit x  = num
-  | isAlpha x  = identifier
-  | otherwise  = (t1,ys) -- '('
-  where num         = (Leaf $ Const $ read [x], xs)
-        identifier  = (Leaf $ Id  [x] , xs)
-        (t1, ')':ys)    = parseExpr2 xs
+parseFactor2 (x:xs)
+  | isDigit x  = num                  -- num
+  | isAlpha x  = identifier           -- identifier
+  | x == '('  = (tE, tail rE)         -- '(' E ')'
+  | otherwise = error ("error parsing factor: " ++ show [x])
+  where num          = (Leaf $ Const $ read [x], xs)
+        identifier   = (Leaf $ Id  [x] , xs)
+        (tE, rE)     = parseExpr2 xs
 
 parseTerm2 :: String -> (BinTree Char Value, String)
-parseTerm2 s@(x:xs)
-  | x == '('      = parseFactor2 s
-  | length s == 1 = parseFactor2 s -- F
-  | otherwise     = (Node '*' left right, rr) -- F '*' T
-  where (left, rl) = parseFactor2 $ take 1 s
-        (right, rr)= parseTerm2 $ drop 2 s
+parseTerm2 s
+  | la rF "*" = (Node '*' tF tT, rT) -- F '*' T
+  | otherwise = (tF, rF)             -- F
+  where (tF, rF) = parseFactor2 s
+        (tT, rT) = parseTerm2 $ tail rF
 
 parseExpr2 :: String -> (BinTree Char Value, String)
-parseExpr2 s@(x:xs)
-  | isNothing i = parseTerm2 s -- T
-  | x == '('    = parseTerm2 s
-  | otherwise = (Node '+' l r, rr)
-  where i = findIndex (=='+') s
-        iInt = fromJust i
-        (l, rl) = parseTerm2 (take iInt s)
-        (r, rr) = parseExpr2 (drop (iInt +1) s)
+parseExpr2 s
+  | la rT "+" = (Node '+' tT tE, rE) -- T '+' E
+  | otherwise = (tT, rT)             -- T
+  where (tT, rT) = parseTerm2 s
+        (tE, rE) = parseExpr2 $ tail rT
 
 test2 :: IO ()
 test2 = showBinTree $ fst $ parseExpr2 "(2+4)*3"
@@ -119,17 +119,40 @@ tokenize s@(x:xs)
   where (dig, rem) = span (`elem` digit) s
 
 -- Ex 14
--- parseExpr' :: [Token] -> (BinTree Token Token, [Token])
--- parseExpr' s@(OpenPar : xs) =
+laT :: [Token] -> [Token] -> Bool -- look ahead function
+laT xs el = length xs > 0 && (head xs) `elem` el
+
+parseFactor' :: [Token] -> (BinTree Token Token, [Token])
+parseFactor' (num@(Num _): ts)      = (Leaf num, ts)
+parseFactor' (ident@(Ident _): ts)  = (Leaf ident, ts)
+parseFactor' (OpenPar: ts)          = (tE, tail rE)
+  where (tE, rE)     = parseExpr' ts
+
+parseTerm' :: [Token] -> (BinTree Token Token, [Token])
+parseTerm' tl
+  | laT rF [Mult] = (Node Mult tF tT, rT) -- F '*' T
+  | otherwise = (tF, rF)             -- F
+  where (tF, rF) = parseFactor' tl
+        (tT, rT) = parseTerm' $ tail rF
+
+parseExpr' :: [Token] -> (BinTree Token Token, [Token])
+parseExpr' tl
+  | laT rT [Add]  = (Node Add tT tE, rE)
+  | otherwise   = (tT, rT)
+  where (tT, rT) = parseTerm' tl
+        (tE, rE) = parseExpr' $ tail rT
+
+test3 :: IO ()
+test3 = showBinTree $ fst $ parseExpr' $ tokenize "(2+4)*3"
 
 -- Ex 15
--- eval :: String -> Int
--- eval = evalTree . parseExpr' . tokenize
+eval :: String -> [(String, Int)] -> Int
+eval s lu = evalTree  (fst $ parseExpr' $ tokenize s)  lu
 
 evalTree :: BinTree Token Token -> [(String, Int)] -> Int
-evalTree (Node token l r) lookupT =  (toOp token) (evalTree l lookupT) (evalTree r lookupT)
-evalTree (Leaf (Num n)) lookupT   = n
-evalTree (Leaf (Ident n)) lookupT = lookupTable n lookupT
+evalTree (Node token l r) lu =  (toOp token) (evalTree l lu) (evalTree r lu)
+evalTree (Leaf (Num n)) lu   = n
+evalTree (Leaf (Ident n)) lu = lookupTable n lu
 
 toOp :: Token -> (Int -> Int -> Int)
 toOp token
@@ -141,3 +164,6 @@ lookupTable var [] = 0
 lookupTable var (t1:ts)
   | fst t1 == var = snd t1
   | otherwise       = lookupTable var ts
+
+testEval :: Int
+testEval = eval "(a123+ 4)*b2" [("a123", 2), ("b2", 3)]
