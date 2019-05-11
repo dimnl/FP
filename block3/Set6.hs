@@ -3,7 +3,16 @@ module Set6 where
 import Data.Foldable
 import Data.Monoid
 import Text.Read
+import Data.Char
+import Control.Applicative
+
 --import Set5
+
+------------------------------------------------------------------------------
+--Exercise 3-FP7
+------------------------------------------------------------------------------
+
+
 
 ------------------------------------------------------------------------------
 -- Exercise 3-FP.8
@@ -27,7 +36,7 @@ t = Node (Node
             (Node (Leaf 6)
                   (Leaf 9)))
          (Leaf 9)
-    
+
 t2 :: BinTree Int
 t2 = Node (Leaf 3) (Leaf 5)
 

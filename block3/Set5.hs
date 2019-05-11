@@ -21,7 +21,9 @@ parser p xs | isLeft res = error $ show $ fromLeft' res
           | otherwise  = fromRight' res
   where res = parse p "" xs
 
+------------------------------------------------------------------------------
 -- Ex 2
+------------------------------------------------------------------------------
 languageDef =
   emptyDef { Token.identStart       = letter
            , Token.identLetter      = alphaNum
@@ -42,7 +44,9 @@ parens     = Token.parens lexer
 symbol     = Token.symbol lexer
 reserved   = Token.reserved lexer
 
+------------------------------------------------------------------------------
 -- Ex 3
+------------------------------------------------------------------------------
 -- define Expr; commented out for later exercise
 -- data Expr = Add   Expr Expr
 --           | Mult  Expr Expr
@@ -80,7 +84,9 @@ parseExpr = try (Add <$> (parseTerm <* spaces <* symbol "+")
 
 test3_3 = parser parseExpr "3*(1+a)"
 
+------------------------------------------------------------------------------
 -- Ex 4
+------------------------------------------------------------------------------
 -- 1
 data Cond = Cond Expr Expr
           deriving (Show, Eq)
@@ -109,7 +115,9 @@ parseDec = Dec <$> (reserved "dec" *> parseExpr')
 parseExpr' :: Parser Expr
 parseExpr' = parseDec <|> parseIf <|> parseExpr
 
+------------------------------------------------------------------------------
 -- Ex 5
+------------------------------------------------------------------------------
 data FunDef = Function Expr Expr Expr
             deriving (Show, Eq)
 
@@ -138,7 +146,9 @@ parserFun = parser parseFunction
 fib :: FunDef
 fib = parserFun "function fib x = if x == 0 then 1 else (if x == 1 then 1 else fib(dec x)+fib(dec dec x))"
 
+------------------------------------------------------------------------------
 -- Ex 6
+------------------------------------------------------------------------------
 evalfun :: FunDef -> Integer -> Integer
 evalfun (Function fname argname expr) i = evalExpr expr i expr
 
