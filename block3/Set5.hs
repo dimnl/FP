@@ -73,14 +73,38 @@ parseIdent = do
 
 -- 2
 parseTerm :: Parser Expr
-parseTerm = try (Mult <$> (parseFactor <* spaces <* symbol "*")
-                      <*> (spaces *> parseFactor))
-          <|> parseFactor
+parseTerm = do
+  f1 <- parseFactor
+  loop f1
+  where checkOp f1 = do
+            spaces
+            op <- symbol "*"
+            spaces
+            f2 <- parseFactor
+            loop $ Mult f1 f2
+        loop f = try(checkOp f) <|> return f
+
+-- Version that only works with zero or one factors:
+-- parseTerm = try (Mult <$> (parseFactor <* spaces <* symbol "*")
+--                       <*> (spaces *> parseFactor))
+--           <|> parseFactor
 -- 3
 parseExpr :: Parser Expr
-parseExpr = try (Add <$> (parseTerm <* spaces <* symbol "+")
-                     <*> (spaces *> parseTerm))
-          <|> parseTerm
+parseExpr = do
+  t1 <- parseTerm
+  loop t1
+  where checkOp t1 = do
+            spaces
+            op <- symbol "+"
+            spaces
+            t2 <- parseTerm
+            loop $ Add t1 t2
+        loop t = try(checkOp t) <|> return t
+
+-- Version that only works with zero or one terms:
+-- parseExpr = try (Add <$> (parseTerm <* spaces <* symbol "+")
+--                      <*> (spaces *> parseTerm))
+--           <|> parseTerm
 
 test3_3 = parser parseExpr "3*(1+a)"
 
