@@ -142,7 +142,7 @@ parseExpr' = parseDec <|> parseIf <|> parseExpr
 ------------------------------------------------------------------------------
 -- Ex 5
 ------------------------------------------------------------------------------
-data FunDef = Function Expr Expr Expr
+data FunDef = Function String String Expr
             deriving (Show, Eq)
 
 data Expr = Add   Expr Expr
@@ -155,8 +155,8 @@ data Expr = Add   Expr Expr
           deriving (Show, Eq)
 -- 2
 parseFunction :: Parser FunDef
-parseFunction = Function <$> (reserved "function" *> parseIdent)
-                         <*> (spaces *> parseIdent)
+parseFunction = Function <$> (reserved "function" *> identifier)
+                         <*> (spaces *> identifier)
                          <*> (spaces *> symbol "=" *> parseExpr')
 parseFactor :: Parser Expr
 parseFactor = parsePar <|> parseNum <|> try(parseIdentPar) <|> parseIdent

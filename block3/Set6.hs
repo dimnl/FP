@@ -41,6 +41,8 @@ addstr :: String -> String -> Maybe String
 addstr s1 s2 = case tryAdd of Nothing  -> Nothing
                               (Just s) -> Just (show s)
                where tryAdd = ((+) <$> readMaybe s1 <*> readMaybe s2 )
+-- optimized verison:
+-- show <$> ((+) <$> readMaybe s1 <*> readMaybe s2)
 
 -- Below BinTree was already in file
 
@@ -126,7 +128,7 @@ f = ((+) <$> getInt) <*> getInt
 ------------------------------------------------------------------------------
 justs :: [Maybe a] -> Maybe [a]
 justs []     = Just []
-justs (x:xs) = fmap (:) x <*> (justs xs)
+justs (x:xs) = (:) <$> x <*> (justs xs)
 
 test_12_all = test_12_1 && test_12_2 && test_12_3 && test_12_4 && test_12_5
 test_12_1 = justs [Just 5, Just 3, Just 6] == Just [5,3,6]
