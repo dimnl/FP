@@ -61,8 +61,8 @@ instance Alternative Parser where
 -- D-3: FP1.7
 ------------------------------------------------------------------
 instance Monoid (Parser a) where
-  mempty = failure
-  mappend p1 p2 = p1 <|> p2 -- not sure if correct yet
+  mempty = empty
+  mappend  = (<|>) -- not sure if correct yet
 
 ------------------------------------------------------------------
 -- D-3: FP1.8

@@ -116,7 +116,23 @@ inc = OneFunction (Function "inc" (Arg (Var "x") Empty)
 eleven = OneFunction (Function "inc" Empty
         (Exec "inc" (Arg (Cons 10) Empty))
       )
-      
+
+------------------------------------------------------------------
+--  D-6: FP4.1
+------------------------------------------------------------------
+-- function :: Parser MicroFunction
+-- function = Function <$>
+-- factor :: Parser MicroExpr
+
+-- term :: Parser MicroExpr
+--
+-- expr :: Parser MicroExpr
+
+-- identifier :: Parser MicroIdent
+-- identifier = P
+
+-- Test using functions.txt
+
 -- QuickCheck: all prop_* tests
 -- return []
 -- check = $quickCheckAll
