@@ -55,19 +55,24 @@ instance Applicative Parser where
 ------------------------------------------------------------------
 instance Alternative Parser where
   empty = failure
-  (P f) <|> (P g) = P (\x -> f x ++ g x)
+  (P f) <|> (P g) = P p
+    where p x | not $ null $ f x  = f x
+              | not $ null $ g x  = g x
+              | otherwise = []
 
 ------------------------------------------------------------------
 -- D-3: FP1.7
 ------------------------------------------------------------------
 instance Monoid (Parser a) where
   mempty = empty
-  mappend  = (<|>) -- not sure if correct yet
+  mappend (P f) (P g)  = P (\x -> f x ++ g x)
 
 ------------------------------------------------------------------
 -- D-3: FP1.8
 ------------------------------------------------------------------
-
+-- instance (Monoid a) => Monoid (Parser a) where
+--   mempty = empty
+--   mappend (P p1) (P p2)= p1 <*> p2
 
 ------------------------------------------------------------------
 -- Some tests
@@ -75,11 +80,8 @@ instance Monoid (Parser a) where
 parseOne :: Parser Char
 parseOne = char '1'
 
-parserRun :: Parser r -> Stream -> [(r, Stream)]
-parserRun p s = runParser p s
-
 parseOneInt :: Parser Int
 parseOneInt = fmap digitToInt parseOne
 
-parseOneIntFail    = parserRun parseOneInt (Stream "2a2")
-parseOneIntSatisfy = parserRun parseOneInt (Stream "1a21")
+parseOneIntFail    = runParser parseOneInt (Stream "2a2")
+parseOneIntSatisfy = runParser parseOneInt (Stream "1a21")
