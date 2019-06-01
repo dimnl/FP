@@ -21,44 +21,43 @@ newtype Parser a = P { runParser :: Stream -> [(a, Stream)]}
 --  D-3: FP1.2
 ------------------------------------------------------------------
 instance Functor Parser where
-  fmap f (P g) = P $ fmap (applyOnFirst f) . g
-
-applyOnFirst :: (a -> b) -> (a, Stream) -> (b,Stream)
-applyOnFirst f (x,y) = (f x, y)
+  fmap f (P g) = P $ fmap (\(x,y)-> (f x, y)) . g
 
 ------------------------------------------------------------------
 --  D-3: FP1.3
 ------------------------------------------------------------------
-char :: Char -> Parser Char
-char c = P p
+-- Returns value if cond satisfies
+satisfy  :: (Char -> Bool) -> Parser Char
+satisfy cond = P p
   where p (Stream []) = []
         p (Stream (x:xs))
-          | c == x    = [(x, Stream xs)]
+          | cond x    = [(x, Stream xs)]
           | otherwise = []
+
+-- Parses one character
+char :: Char -> Parser Char
+char c = satisfy (==c)
 
 ------------------------------------------------------------------
 --  D-3: FP1.4
 ------------------------------------------------------------------
 failure :: Parser a
-failure = P p
-  where p (Stream _) = []
+failure = P (\x -> [])
 
 ------------------------------------------------------------------
 -- D-3: FP1.5
 ------------------------------------------------------------------
 instance Applicative Parser where
   pure f = P (\x -> [(f, x)])
-  (P f) <*> (P g) = P (\x -> [(resultF resultG, x2) | (resultF, x1) <- f x, (resultG, x2) <- g x1])
+  (P f) <*> (P g) = P (\x -> [(r1 r2, x2) | (r1, x1) <- f x, (r2, x2) <- g x1])
 
 ------------------------------------------------------------------
 -- D-3: FP1.6
 ------------------------------------------------------------------
 instance Alternative Parser where
   empty = failure
-  (P f) <|> (P g) = P p
-    where p x | not $ null $ f x  = f x
-              | not $ null $ g x  = g x
-              | otherwise = []
+  (P f) <|> (P g) = P $ \x -> case f x of [] -> g x
+                                          v  -> v
 
 ------------------------------------------------------------------
 -- D-3: FP1.7

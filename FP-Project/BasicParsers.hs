@@ -14,18 +14,11 @@ import PComb
 ------------------------------------------------------------------
 -- Finding lowercase letters only, as specified in D-1
 letter :: Parser Char
-letter = P p
-  where p (Stream []) = []
-        p (Stream (x:xs))
-          | isLower x = [(x, Stream xs)]
-          | otherwise = []
+letter = satisfy isLower
 
+-- Parse one digit; [0-9]
 dig :: Parser Char
-dig = P p
-  where p (Stream []) = []
-        p (Stream (x:xs))
-          | isDigit x = [(x, Stream xs)]
-          | otherwise = []
+dig = satisfy isDigit
 
 -- Simple tests
 parseLetterFail    = runParser letter (Stream "1a12")
@@ -41,16 +34,22 @@ parseDigSatisfy = runParser dig (Stream "1a12")
 between :: Parser a -> Parser b -> Parser c -> Parser b
 between p1 p2 p3 = p1 *> p2 <* p3
 
--- Parse, while skipping all whitespace (space, tab and newline)
+-- Parse, while skipping all surrounding whitespace (space, tab and newline)
 whitespace :: Parser a -> Parser a
-whitespace (P p) = P pR
-  where pR (Stream xs) = p (Stream (filter (\c -> not $ isSpace c) xs))
+whitespace p = between spaces p spaces
 
+-- Parse all preceding whitespace (space, tab and newline)
+spaces :: Parser String
+spaces = many space
+
+-- Parses spaces (+ tabs and newlines)
+space :: Parser Char
+space = satisfy isSpace
 
 -- Simple tests
 parseBetweenFail = runParser (between (char '(') letter (char ')')) (Stream ")a)")
 parseBetweenSatisfy = runParser (between (char '(') letter (char ')')) (Stream "(a)")
-parseWhiteSpace = runParser (whitespace (char 'a'))  (Stream " \t  a  \n ")
+parseWhiteSpace = runParser (whitespace (char 'a'))  (Stream " \t  \n  a  \n ")
 
 ------------------------------------------------------------------
 --  D-4: FP2.3
@@ -84,16 +83,18 @@ string (x:xs) = (:) <$> char x <*> string xs
 -- Parses a given identifier surrounded by whitespace
 -- identifier starts with letter, followed by letters or digits
 identifier :: Parser String
-identifier = whitespace $ P p
-  where p = (\x -> [([r1]  ++ r2, x2) | (r1, x1) <- f x, (r2, x2) <- g x1])
-        f = runParser letter
-        g = runParser (many (dig <|> letter))
+identifier = whitespace $ fmap (:) letter <*> many (dig <|> letter)
+  -- Old working version
+    -- p = (\x -> [([r1]  ++ r2, x2) | (r1, x1) <- f x, (r2, x2) <- g x1])
+    --     f = runParser letter
+    --     g = runParser (many (dig <|> letter))
 
 -- Parses an integer surrounded by whitespace
 integer :: Parser Int
-integer = whitespace $ P p
-  where p = \x -> [(read r, xs)| (r,xs) <- runParser digits x]
-        digits = some dig
+integer = whitespace $ fmap read (some dig)
+-- Old working version:
+    -- p = \x -> [(read r, xs)| (r,xs) <- runParser digits x]
+    --     digits = some dig
 
 -- Parses a given String surrounde by whitespace
 symbol :: String -> Parser ()
@@ -119,5 +120,5 @@ parseSymbolSatisfy    = runParser (symbol "=") (Stream "  =  123")
 parseSymbolFail       = runParser (symbol "=") (Stream " 123 =  123")
 parseParensSatisfy    = runParser (parens identifier) (Stream "(aa23a)")
 parseParensFail       = runParser (parens identifier) (Stream "(123()")
-parseBracesSatify     = runParser (braces identifier) (Stream "{aa23a}")
+parseBracesSatify     = runParser (braces identifier) (Stream "{ aa23a }")
 parseBracesFail       = runParser (braces identifier) (Stream "{123{}")
