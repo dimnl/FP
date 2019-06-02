@@ -90,7 +90,7 @@ identifier = whitespace $ fmap (:) letter <*> many (dig <|> letter)
     --     g = runParser (many (dig <|> letter))
 
 -- Parses an integer surrounded by whitespace
-integer :: Parser Int
+integer :: Parser Integer
 integer = whitespace $ fmap read (some dig)
 -- Old working version:
     -- p = \x -> [(read r, xs)| (r,xs) <- runParser digits x]
@@ -98,8 +98,8 @@ integer = whitespace $ fmap read (some dig)
 
 -- Parses a given String surrounde by whitespace
 symbol :: String -> Parser ()
-symbol s = whitespace $ P p
-  where p = \x -> [((),xs)| (_,xs) <- runParser (string s) x]
+symbol s = whitespace $ string s *> pure ()
+  -- = \x -> [((),xs)| (_,xs) <- runParser (string s) x]
 
 -- Parses something between parentheses using the given parser
 parens :: Parser a -> Parser a

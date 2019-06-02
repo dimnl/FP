@@ -18,7 +18,7 @@ import BasicParsers
 ------------------------------------------------------------------
 -- Define datatypes for identifier and integer
 type MicroIdent = String
-type MicroInt   = Int
+type MicroInt   = Integer
 
 -- <program>
 data MicroProgram  = MultipleFunction MicroFunction MicroProgram
@@ -167,23 +167,28 @@ instance PrettyPrint MicroOrdering where
 ------------------------------------------------------------------
 --  D-5: FP3.4
 ------------------------------------------------------------------
--- evalfun :: MicroFunction -> Integer -> Integer
--- evalfun (Function ident arg expr) i = evalExpr expr i expr
---
--- evalExpr :: Expr -> Integer -> Expr -> Integer
--- evalExpr f i (Add  x y) = evalExpr f i x + evalExpr f i y
--- evalExpr f i (Mult x y) = evalExpr f i x * evalExpr f i y
--- evalExpr f i (Const x)  = x
--- evalExpr f i (Var x)    = i
+eval :: MicroProgram -> [Integer] -> Integer
+eval (OneFunction func) vals = evalFun func vals
+
+evalFun :: MicroFunction -> [Integer] -> Integer
+evalFun func@(Function ident arg expr) vals = evalExpr func expr vals
+
+evalExpr :: MicroFunction -> MicroExpr -> [Integer] -> Integer
+evalExpr func expr vals = case expr of
+  (Add  x y) -> evalExpr func x vals + evalExpr func y vals
+  (Mult x y) -> evalExpr func x vals * evalExpr func y vals
+  (Cons x)   -> x
+  -- (Var x)    -> 1
 -- evalExpr f i (If c f1 f2)
 --  | evalCond f i c       = evalExpr f i f1
 --  | otherwise            = evalExpr f i f2
 -- evalExpr f i (Dec x)    = evalExpr f i x - 1
 -- evalExpr f i (Eval x y) = evalExpr f (evalExpr f i y) f
---
+
 -- evalCond :: Expr -> Integer -> Cond -> Bool
 -- evalCond f i (Cond x y) = evalExpr f i x == evalExpr f i y
-
+-- bind :: MicroIdent -> MicroArg -> [Integer] -> Integer
+-- bind ident arg vals
 ------------------------------------------------------------------
 --  D-6: FP4.1
 ------------------------------------------------------------------
@@ -251,7 +256,6 @@ ordering =  symbol "<" *> pure LessThan
 condition :: Parser MicroCond
 condition = Cond <$> expr <*> ordering <*> expr
 
-
 -- Helper functions for testing
 runProgram :: String -> [(MicroProgram, Stream)]
 runProgram s = runParser program (Stream s)
@@ -262,16 +266,22 @@ getParsed = fst . head
 -- Test using defined functions of FP3.2
 parseFibonacci = runProgram (pretty fibonacci)
 prop_parseFibonacci = fibonacci == getParsed parseFibonacci
+
 parseFib = runProgram (pretty fib)
 prop_parseFib = fib == getParsed parseFib
+
 parseDiv = runProgram (pretty microdiv)
 prop_parseDiv = microdiv == getParsed parseDiv
+
 parseTwice = runProgram (pretty twice)
 prop_parseTwice = twice == getParsed parseTwice
+
 parseAdd = runProgram (pretty add)
 prop_parseAdd = add == getParsed parseAdd
+
 parseInc = runProgram (pretty inc)
 prop_parseInc = inc == getParsed parseInc
+
 parseEleven = runProgram (pretty eleven)
 prop_parseEleven = eleven == getParsed parseEleven
 
