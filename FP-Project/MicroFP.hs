@@ -56,6 +56,8 @@ data MicroOrdering  = LessThan
 ------------------------------------------------------------------
 --  D-5: FP3.2
 ------------------------------------------------------------------
+-- fibonacci of functions.txt
+fibonacci :: MicroProgram
 fibonacci = MultipleFunction (Function "fibonacci" (Arg (Cons 0) Empty) (Cons 0))
               (
                 MultipleFunction (Function "fibonacci" (Arg (Cons 1) Empty) (Cons 1))
@@ -69,6 +71,8 @@ fibonacci = MultipleFunction (Function "fibonacci" (Arg (Cons 0) Empty) (Cons 0)
                   )
               )
 
+-- fib of functions.txt
+fib :: MicroProgram
 fib = OneFunction (
         Function "fib" (Arg (Var "n") Empty)
         (If (Cond (Var "n") LessThan (Cons 3))
@@ -80,6 +84,8 @@ fib = OneFunction (
         )
       )
 
+-- sum of functions.txt
+microsum :: MicroProgram
 microsum = MultipleFunction (Function "sum" (Arg (Cons 0) Empty) (Cons 0))
         (
           OneFunction (Function "sum" (Arg (Var "a") Empty)
@@ -90,6 +96,8 @@ microsum = MultipleFunction (Function "sum" (Arg (Cons 0) Empty) (Cons 0))
           )
         )
 
+-- div of funcitons.txt
+microdiv :: MicroProgram
 microdiv = OneFunction (Function "div" (Arg (Var "x") (Arg (Var "y") Empty))
               (If (Cond (Var "x") LessThan (Var "y"))
                 (Cons 0) -- Cond True
@@ -100,19 +108,27 @@ microdiv = OneFunction (Function "div" (Arg (Var "x") (Arg (Var "y") Empty))
               )
            )
 
+-- twice of functions.txt
+twice :: MicroProgram
 twice = OneFunction (
           Function "twice" (Arg (Var "f") (Arg (Var "x") Empty))
           (Exec "f" (Arg (Exec "f" (Arg (Var "x") Empty)) Empty))
         )
 
+-- add of functions.txt
+add :: MicroProgram
 add = OneFunction (Function "add" (Arg (Var "x") (Arg (Var "y") Empty))
         (Add (Var "x") (Var "y"))
       )
 
+-- inc of funcitons.txt
+inc :: MicroProgram
 inc = OneFunction (Function "inc" Empty
         (Exec "add" (Arg (Cons 1) Empty))
       )
 
+-- eleven of functions.txt
+eleven :: MicroProgram
 eleven = OneFunction (Function "eleven" Empty
         (Exec "inc" (Arg (Cons 10) Empty))
       )
@@ -136,59 +152,95 @@ instance PrettyPrint MicroFunction where
   pretty (Function ident arg expr) = ident ++ " " ++ prettyArgSpaces arg ++ " := " ++ pretty expr ++ ";"
 
 prettyArgSpaces :: MicroArg -> String
-prettyArgSpaces (Arg expr Empty) = pretty expr
-prettyArgSpaces (Arg expr arg) = pretty expr ++ " " ++ prettyArgSpaces arg
-prettyArgSpaces Empty = ""
+prettyArgSpaces args = case args of
+  (Arg expr Empty)  -> pretty expr
+  (Arg expr arg)    -> pretty expr ++ " " ++ prettyArgSpaces arg
+  Empty             -> ""
 
 instance PrettyPrint MicroArg where
-  pretty (Arg expr Empty) = pretty expr
-  pretty (Arg expr arg) = pretty expr ++ ", " ++ pretty arg
-  pretty Empty = ""
+  pretty args = case args of
+    (Arg expr Empty) -> pretty expr
+    (Arg expr arg)   -> pretty expr ++ ", " ++ pretty arg
+    Empty            -> ""
 
 instance PrettyPrint MicroExpr where
-  pretty (Add expr1 expr2) = pretty expr1 ++ " + " ++ pretty expr2
-  pretty (Sub expr1 expr2) = pretty expr1 ++ " - " ++ pretty expr2
-  pretty (Cons int )       = show int
-  pretty (Var ident)       = ident
-  pretty (If cond expr1 expr2) = ("if " ++ pretty cond ++
+  pretty expres = case expres of
+    (Add expr1 expr2)     -> pretty expr1 ++ " + " ++ pretty expr2
+    (Sub expr1 expr2)     -> pretty expr1 ++ " - " ++ pretty expr2
+    (Cons int )           -> show int
+    (Var ident)           -> ident
+    (If cond expr1 expr2) -> ("if " ++ pretty cond ++
                                   " then { " ++ pretty expr1 ++
-                                  " } else { " ++ pretty expr2 ++ "}")
-  pretty (Paren expr)      = "(" ++ pretty expr ++ ")"
-  pretty (Exec ident arg)  = ident ++ " (" ++ pretty arg ++ ")"
+                                  " } else { " ++ pretty expr2 ++ " }")
+    (Paren expr)          -> "(" ++ pretty expr ++ ")"
+    (Exec ident arg)      -> ident ++ " (" ++ pretty arg ++ ")"
 
 instance PrettyPrint MicroCond where
   pretty (Cond expr1 order expr2) = "(" ++ pretty expr1 ++ pretty order ++ pretty expr2 ++ ")"
 
 instance PrettyPrint MicroOrdering where
-  pretty LessThan = " < "
-  pretty EqualTo = " == "
-  pretty GreaterThan = " > "
+  pretty op = case op of
+    LessThan    -> " < "
+    EqualTo     -> " == "
+    GreaterThan -> " > "
 
 ------------------------------------------------------------------
 --  D-5: FP3.4
 ------------------------------------------------------------------
-eval :: MicroProgram -> [Integer] -> Integer
+-- Evauluates MicroProgram and returns answer of EDSL
+eval :: MicroProgram -> [(MicroIdent, MicroInt)] -> MicroInt
 eval (OneFunction func) vals = evalFun func vals
 
-evalFun :: MicroFunction -> [Integer] -> Integer
-evalFun func@(Function ident arg expr) vals = evalExpr func expr vals
+evalFun :: MicroFunction -> [(MicroIdent, MicroInt)] -> MicroInt
+evalFun func@(Function _ _ expr) vals = evalExpr func expr vals
 
-evalExpr :: MicroFunction -> MicroExpr -> [Integer] -> Integer
-evalExpr func expr vals = case expr of
+evalExpr :: MicroFunction -> MicroExpr -> [(MicroIdent, MicroInt)] -> MicroInt
+evalExpr func@(Function _ args _) expr vals = case expr of
   (Add  x y) -> evalExpr func x vals + evalExpr func y vals
+  (Sub  x y) -> evalExpr func x vals - evalExpr func y vals
   (Mult x y) -> evalExpr func x vals * evalExpr func y vals
   (Cons x)   -> x
-  -- (Var x)    -> 1
--- evalExpr f i (If c f1 f2)
---  | evalCond f i c       = evalExpr f i f1
---  | otherwise            = evalExpr f i f2
--- evalExpr f i (Dec x)    = evalExpr f i x - 1
--- evalExpr f i (Eval x y) = evalExpr f (evalExpr f i y) f
+  (Var x)    -> case filter ((==x).fst) vals of
+                  [] -> error ("Value unkonwn of variable: " ++ x)
+                  v  -> snd $ head  v
+  (If c x y) | evalCond func c vals -> evalExpr func x vals
+             | otherwise            -> evalExpr func y vals
+  (Paren x)  -> evalExpr func x vals
+  (Exec i a) -> evalFun func (zip (evalFunctionArgs args) (evalArgs func a vals))
 
--- evalCond :: Expr -> Integer -> Cond -> Bool
--- evalCond f i (Cond x y) = evalExpr f i x == evalExpr f i y
--- bind :: MicroIdent -> MicroArg -> [Integer] -> Integer
--- bind ident arg vals
+evalCond :: MicroFunction -> MicroCond -> [(MicroIdent, MicroInt)] -> Bool
+evalCond func (Cond x o y) vals = order c1 c2
+  where c1    = evalExpr func x vals
+        order = evalOrd o
+        c2    = evalExpr func y vals
+
+evalOrd :: (Ord a) => MicroOrdering -> a -> a -> Bool
+evalOrd op = case op of
+              LessThan -> (<)
+              EqualTo -> (==)
+              GreaterThan -> (>)
+
+evalFunctionArgs :: MicroArg -> [MicroIdent]
+evalFunctionArgs args = case args of
+  (Arg (Var ident) Empty) -> [ident]
+  (Arg (Cons integ) Empty) -> [show integ]
+  (Arg expr arg) -> evalFunctionArgs (Arg expr Empty) ++ evalFunctionArgs arg
+  Empty -> []
+
+evalArgs :: MicroFunction -> MicroArg -> [(MicroIdent, MicroInt)] -> [MicroInt]
+evalArgs func args vals = case args of
+  (Arg expr Empty) -> [evalExpr func expr vals]
+  (Arg expr arg)   -> [evalExpr func expr vals] ++ evalArgs func arg vals
+  Empty            -> []
+
+-- Simple tests
+evalAdd x y = eval add [("x",x), ("y",y)]
+evalMath s = eval (compile ("f := " ++ s ++ ";")) []
+evalMath1 = evalMath "(1+2)*3"
+evalMath2 = evalMath "2-(3+(1+2))*3"
+evalFib n = eval fib [("n",n)]
+evalDiv x y = eval microdiv [("x", x),("y",y)]
+
 ------------------------------------------------------------------
 --  D-6: FP4.1
 ------------------------------------------------------------------
@@ -206,7 +258,7 @@ function = Function <$> identifier <*> functionArg <*> (symbol ":=" *> expr) <* 
 functionArg :: Parser MicroArg
 functionArg =  (Arg <$> (ident<|>integ) <*> option Empty functionArg)
             <|> pure Empty
-            <|> error "cannot parse function args"
+            -- <|> error "cannot parse function args"
       where   ident = Var <$> identifier
               integ = Cons <$> integer
 
@@ -216,7 +268,7 @@ expr :: Parser MicroExpr
 expr =  Add <$> (term <* symbol "+") <*> expr
     <|> Sub <$> (term <* symbol "-") <*> expr
     <|> term
-    <|> error "cannot parse expr"
+    -- <|> error "cannot parse expr"
 
 -- Parse factor :
 -- identifier ('(' <expr>(',' <expr>)* ')')?
@@ -242,8 +294,6 @@ args :: Parser MicroArg
 args = Arg <$> expr <*> option Empty (char ',' *> args)
      <|> pure Empty
 
-parseArgs = runParser args (Stream "a, 2, 3, 6 ")
-
 -- Parse ordering :
 -- '<' | '==' | '>'
 ordering :: Parser MicroOrdering
@@ -263,7 +313,7 @@ runProgram s = runParser program (Stream s)
 getParsed :: [(a, Stream)] -> a
 getParsed = fst . head
 
--- Test using defined functions of FP3.2
+-- Simple tests (using defined functions of FP3.2)
 parseFibonacci = runProgram (pretty fibonacci)
 prop_parseFibonacci = fibonacci == getParsed parseFibonacci
 
@@ -300,6 +350,3 @@ compile = getParsed . runProgram
 ------------------------------------------------------------------
 -- runFile :: FilePath -> [Integer] IO
 -- runFile path = (eval . compile) <$> readFile path
--- QuickCheck: all prop_* tests
--- return []
--- check = $quickCheckAll
