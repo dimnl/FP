@@ -49,6 +49,7 @@ space = satisfy isSpace
 -- Simple tests
 parseBetweenFail = runParser (between (char '(') letter (char ')')) (Stream ")a)")
 parseBetweenSatisfy = runParser (between (char '(') letter (char ')')) (Stream "(a)")
+
 parseWhiteSpace = runParser (whitespace (char 'a'))  (Stream " \t  \n  a  \n ")
 
 ------------------------------------------------------------------
@@ -69,6 +70,7 @@ option x p = p <|> pure x
 -- Simple tests
 parseSep1 = runParser (sep1 letter (char 'a')) (Stream "babarae")
 parseSep = runParser (sep letter (char 'a')) (Stream "babarae")
+
 parseOptionFail = runParser (option 'x' letter) (Stream "123")
 parseOptionSatisfy = runParser (option 'x' dig) (Stream "123")
 
@@ -84,22 +86,14 @@ string (x:xs) = (:) <$> char x <*> string xs
 -- identifier starts with letter, followed by letters or digits
 identifier :: Parser String
 identifier = whitespace $ fmap (:) letter <*> many (dig <|> letter)
-  -- Old working version
-    -- p = (\x -> [([r1]  ++ r2, x2) | (r1, x1) <- f x, (r2, x2) <- g x1])
-    --     f = runParser letter
-    --     g = runParser (many (dig <|> letter))
 
 -- Parses an integer surrounded by whitespace
 integer :: Parser Integer
 integer = whitespace $ fmap read (some dig)
--- Old working version:
-    -- p = \x -> [(read r, xs)| (r,xs) <- runParser digits x]
-    --     digits = some dig
 
 -- Parses a given String surrounde by whitespace
 symbol :: String -> Parser ()
 symbol s = whitespace $ string s *> pure ()
-  -- = \x -> [((),xs)| (_,xs) <- runParser (string s) x]
 
 -- Parses something between parentheses using the given parser
 parens :: Parser a -> Parser a
@@ -112,13 +106,18 @@ braces p = between (char '{') p (char '}')
 -- Simple tests
 parseStringSatisfy    = runParser (string "ab") (Stream "ab123b")
 parseStringFail       = runParser (string "abc") (Stream "ab123b")
+
 parseIdentifierSatisfy= runParser identifier (Stream "\t  ab123b")
 parseIdentifierFail   = runParser identifier (Stream "1ab123b")
+
 parseIntegerSatisfy   = runParser integer (Stream "\t  23b")
 parseIntegerFail      = runParser integer (Stream "a1ab123b")
+
 parseSymbolSatisfy    = runParser (symbol "=") (Stream "  =  123")
 parseSymbolFail       = runParser (symbol "=") (Stream " 123 =  123")
+
 parseParensSatisfy    = runParser (parens identifier) (Stream "(aa23a)")
 parseParensFail       = runParser (parens identifier) (Stream "(123()")
+
 parseBracesSatify     = runParser (braces identifier) (Stream "{ aa23a }")
 parseBracesFail       = runParser (braces identifier) (Stream "{123{}")
