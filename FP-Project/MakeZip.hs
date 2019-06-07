@@ -27,7 +27,7 @@ makeArchive :: String -> ZipArchive ()
 makeArchive prefix = do addFile prefix "PComb.hs"
                         addFile prefix "BasicParsers.hs"
                         addFile prefix "MicroFP.hs"
-                        addFile prefix "func.txt"
+                        addFile prefix "functions.txt"
 
 data Student = Student { stname :: String, stnum :: String} deriving Eq
 
@@ -38,7 +38,7 @@ findstudent id  (x:xs) | lbl == "-- Student 1: " && id == 1 = Just (Student (ini
                        | otherwise                          = findstudent id xs
                       where lbl          = take 14 x                   -- Ugly...
                             (name,snum') = span (/='(') $ drop 14 x    -- ... parser :-)
-  
+
 checkFile :: FilePath -> IO (Student, Student)
 checkFile fname  = do contents <- lines <$> readFile fname
                       let s1 = findstudent 1 contents
@@ -50,7 +50,7 @@ checkFile fname  = do contents <- lines <$> readFile fname
                       else
                         return ()
                       return (fromJust s1, fromJust s2)
-                     
+
 verifyFile :: FilePath -> (Student, Student) -> IO ()
 verifyFile fname (s1,s2) = do (s1',s2') <- checkFile fname
                               if (s1 /= s1') then (fail $ "Incorrect student 1 in " ++ fname ++ ": it should match PComb.hs") else return ()
