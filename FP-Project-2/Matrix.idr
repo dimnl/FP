@@ -51,7 +51,6 @@ transpose {n = (S len)} (M (x :: xs)) = M (zipWith (::) x (transpose xs))
 -- Define eye that creates the identity matrix of size n recursively
 eye : (Num a) => (n : Nat) -> Matrix n n a
 eye Z = M []
--- eye n = M (zipWith (::) (replicate n 0) (eye xs))
-
--- Idea: start with last row; replicate n 0 and then add 1 to index from row
--- repeat this for all rows
+eye (S n) with (eye n)
+  | (M xs) = M (Vect.zipWith (::) (1::zeroes) (insertAt FZ zeroes xs))
+    where zeroes = replicate n 0
