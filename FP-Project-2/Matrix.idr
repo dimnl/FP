@@ -52,5 +52,5 @@ transpose {n = (S len)} (M (x :: xs)) = M (zipWith (::) x (transpose xs))
 eye : (Num a) => (n : Nat) -> Matrix n n a
 eye Z = M []
 eye (S n) with (eye n)
-  | (M xs) = M (Vect.zipWith (::) (1::zeroes) (insertAt FZ zeroes xs))
+  | (M xs) = M (zipWith (::) (1::zeroes) (insertAt FZ zeroes xs))
     where zeroes = replicate n 0
