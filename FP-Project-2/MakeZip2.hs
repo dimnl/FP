@@ -24,10 +24,10 @@ addFile prefix file = do entry <- mkEntrySelector $ prefix ++ "/" ++ file
                          loadEntry Store entry file
 
 makeArchive :: String -> ZipArchive ()
-makeArchive prefix = do addFile prefix "PComb.hs"
-                        addFile prefix "BasicParsers.hs"
-                        addFile prefix "MicroFP.hs"
-                        addFile prefix "functions.txt"
+makeArchive prefix = do addFile prefix "Introduction.idr"
+                        addFile prefix "Matrix.idr"
+                        addFile prefix "Selection.idr"
+                        addFile prefix "Presentation.pdf"
 
 data Student = Student { stname :: String, stnum :: String} deriving Eq
 

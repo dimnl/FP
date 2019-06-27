@@ -1,0 +1,220 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+
+\usepackage{color}
+\usepackage{listings}
+
+%% Setup
+\lstset{
+%	language=Haskell,
+	basicstyle=\small\sffamily,
+%	numbers=left,
+%	numberstyle=\tiny,
+%	frame=tb,
+	tabsize=4,
+	columns=fixed,
+	showstringspaces=false,
+	showtabs=false,
+	keepspaces,
+	commentstyle=\color{red},
+	keywordstyle=\color{blue}
+}
+
+
+% \usepackage{roboto}
+
+\usetheme{metropolis} % Hannover is also nice
+%\usecolortheme{dove}
+
+%------------------------------------------------------------
+% Information to add to title page
+\title{Functional Programming}
+\subtitle{Second project: Idris}
+\author{D.C.M. Hoogeveen}
+\institute{University of Twente}
+\date{July 3, 2019}
+
+%------------------------------------------------------------
+%The next block of commands puts the table of contents at the 
+%beginning of each section and highlights the current section:
+
+% \AtBeginSection[]
+% {
+%   \begin{frame}
+%     \frametitle{Table of Contents}
+%     \tableofcontents[currentsection]
+%   \end{frame}
+% }
+%------------------------------------------------------------
+
+\begin{document}
+
+\frame{\titlepage} % Title page
+
+% Table of contents
+\begin{frame}
+\frametitle{Table of Contents}
+\tableofcontents
+\end{frame}
+
+\section{Idris in general}
+
+\begin{frame} % First slide
+\frametitle{Idris characteristics}
+
+\begin{itemize}
+	\item \textbf{Functional programming} language
+	\item Haskell-inspired syntax
+	\item \textbf{Strict} evaluation order
+	\item Installable using Cabal
+	\item Pac-man Complete % as its inventor Edwin brady says: able to build pac-man with it
+	\item \textbf{Compiled} (via e.g. C and Javascript); 
+		\begin{itemize}
+			\item Optimisations possible (e.g. aggresive erasure and inlining) % such as aggresive erasure, inlining and partial evaluation
+		\end{itemize}
+		
+	\item \textbf{Dependent type} system
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Dependent types: what?}
+
+
+\begin{example}
+	Looking at following type definition, what can we infer?
+\end{example}
+
+\begin{lstlisting}
+foo : Vect len elem -> Vect len elem
+\end{lstlisting}
+
+\pause
+
+\begin{block}{Inferred}
+	Same length output as input and with the same type element. 
+\end{block}
+
+\pause
+
+\begin{alertblock}{Conclusion}
+	Dependent types allow us to define output dependent on the input.
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Dependent type: why?}
+	Useful for:
+	\begin{itemize}
+		\item \textbf{Checking} intended properties
+		\item \textbf{Guiding} programmer
+		\item Building \textbf{generic} libraries
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Type Drive Development}
+\begin{alertblock}{Type}
+	Write the type definition 
+\end{alertblock}	
+
+\begin{alertblock}{Define}
+	Create a stub implementation; can also be a hole: \textit{?x}
+\end{alertblock}
+
+\begin{alertblock}{Refine}
+	Improve/complete implementation
+\end{alertblock}
+
+\end{frame}
+
+\section{Idris in practice}
+
+
+\begin{frame}[fragile]
+\frametitle{Basics}
+\begin{example}
+Take first element of a vector:
+\end{example}
+
+\begin{lstlisting}
+myhead : Vect (S len) elem -> elem
+myhead (x :: xs) = x
+\end{lstlisting}
+
+\begin{block}{Advantage}
+	Normally, a check is needed to prevent an error when a vector with zero length is used, however this is already defined using (S len)!
+\end{block}
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Idxsize}
+\begin{example}
+Count number of values that are True within a vector recursively 
+\end{example}
+
+\pause
+\begin{lstlisting}
+idxsize : Vect n Bool -> Nat
+\end{lstlisting} \pause
+\begin{lstlisting}
+idxsize [] = 0
+\end{lstlisting} \pause
+\begin{lstlisting}
+idxsize (True :: xs)  = 1 + idxsize xs
+idxsize (False :: xs) = idxsize xs
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Usage of idxsize as type}
+
+\begin{example}
+Combine two vectors by only returning element of second vector if element of first vector is True
+\end{example}
+Defined type definition:
+\begin{lstlisting}
+get : (xs : Vect n Bool) -> Vect n a -> Vect ? a
+\end{lstlisting}
+
+Expected use:
+\begin{lstlisting}
+get [True,False,True] [1,2,3] == [1,3]
+\end{lstlisting}
+
+\textbf{What to fill in for '?'? }
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Usage of idxsize as type}
+\begin{example}
+\end{example}
+\begin{lstlisting}
+get : (xs : Vect n Bool) -> Vect n a -> Vect ? a
+\end{lstlisting}
+
+Expecting a Nat (natural number type) of amount of values in first vector whose value is True.
+\pause
+\begin{block}{Recall idxsize}
+\end{block}
+\begin{lstlisting}
+idxsize : Vect n Bool -> Nat
+\end{lstlisting}
+
+This is exactly the type needed for '?'! 
+\pause
+\begin{alertblock}{Solution}
+	? = idxsize xs
+\end{alertblock}
+\end{frame}
+
+\section{Questions}
+
+\end{document}

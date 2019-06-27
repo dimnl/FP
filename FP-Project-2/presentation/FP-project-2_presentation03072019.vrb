@@ -1,0 +1,20 @@
+\frametitle{Usage of idxsize as type}
+\begin{example}
+\end{example}
+\begin{lstlisting}
+get : (xs : Vect n Bool) -> Vect n a -> Vect ? a
+\end{lstlisting}
+
+Expecting a Nat (natural number type) of amount of values in first vector whose value is True.
+\pause
+\begin{block}{Recall idxsize}
+\end{block}
+\begin{lstlisting}
+idxsize : Vect n Bool -> Nat
+\end{lstlisting}
+
+This is exactly the type needed for '?'!
+\pause
+\begin{alertblock}{Solution}
+	? = idxsize xs
+\end{alertblock}
